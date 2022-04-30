@@ -68,5 +68,23 @@ def select_all_years(
     return sorted(new_years), n_clicks
 
 
+@app.callback(
+    [Output("month-dropdown", "value"), Output("select-all-month-button-clicks", "data")],
+    [
+        Input("year-dropdown", "value"),
+        Input("month-dropdown", "value"),
+        Input("select-all-month-button", "n_clicks"),
+        Input("select-all-month-button-clicks", "data"),
+    ],
+)
+def select_all_months(
+    years: list[int], months: list[str], n_clicks: int, previous_n_clicks: int
+) -> tuple[list[str], int]:
+    filtered_transactions = transactions.query(f"Year == {years}")
+    clicked = n_clicks <= previous_n_clicks
+    new_months = months if clicked else list(filtered_transactions.dropna()["Month"].unique())
+    return sorted(new_months), n_clicks
+
+
 if __name__ == "__main__":
     app.run_server(debug=True)

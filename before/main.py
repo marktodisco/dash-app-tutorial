@@ -86,5 +86,24 @@ def select_all_months(
     return sorted(new_months), n_clicks
 
 
+@app.callback(
+    Output("category-dropdown", "value"),
+    [
+        Input("year-dropdown", "value"),
+        Input("month-dropdown", "value"),
+        Input("select-all-category-button", "n_clicks"),
+    ],
+)
+def select_all_categories(year: list[int], month: list[int], _: list[int]) -> list[str]:
+    categories: list[str] = list(
+        transactions.dropna()
+        .query(f"Year == {year}")
+        .query(f"Month == {month}")
+        .loc[:, "Category"]
+        .unique()
+    )
+    return sorted(categories)
+
+
 if __name__ == "__main__":
     app.run_server(debug=True)

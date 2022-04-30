@@ -52,14 +52,14 @@ app.layout = html.Div(
 register_callbacks(app)
 
 
-# @app.callback(
-#     [Output("year-dropdown", "value"), Output("select-all-year-button-clicks", "data")],
-#     [
-#         Input("year-dropdown", "value"),
-#         Input("select-all-year-button", "n_clicks"),
-#         Input("select-all-year-button-clicks", "data"),
-#     ]
-# )
+@app.callback(
+    [Output("year-dropdown", "value"), Output("select-all-year-button-clicks", "data")],
+    [
+        Input("year-dropdown", "value"),
+        Input("select-all-year-button", "n_clicks"),
+        Input("select-all-year-button-clicks", "data"),
+    ],
+)
 def select_all_years(
     years: list[int], n_clicks: int, previous_n_clicks: int
 ) -> tuple[list[int], int]:

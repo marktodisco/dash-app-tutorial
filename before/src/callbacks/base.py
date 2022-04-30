@@ -20,7 +20,6 @@ def fetch_callbacks() -> List[Callback]:
     from src.callbacks.populate_tab_output import PopulateTabOutput
     from src.callbacks.select_all_categories import SelectAllCategories
     from src.callbacks.select_all_months import SelectAllMonths
-    from src.callbacks.select_all_years import SelectAllYears
     from src.callbacks.update_category_dropdown import UpdateCategoryDropDown
     from src.callbacks.update_month_dropdown import UpdateMonthDropDown
     from src.callbacks.update_rolling_budget import UpdateRollingBudget
@@ -29,7 +28,6 @@ def fetch_callbacks() -> List[Callback]:
     return [
         FilterBudgetRecordsCallback(),
         # PopulateTabOutput(),
-        SelectAllYears(),
         # SelectAllMonths(),
         # SelectAllCategories(),
         # UpdateCategoryDropDown(),

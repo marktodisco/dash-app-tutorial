@@ -23,8 +23,6 @@ def fetch_callbacks() -> List[Callback]:
     from src.callbacks.update_year_dropdown import UpdateYearDropdown
 
     return [
-        # FilterBudgetRecordsCallback(),
-        # PopulateTabOutput(),
         # UpdateCategoryDropDown(),
         # UpdateRollingBudget(),
         # UpdateMonthDropDown(),

@@ -1,27 +1,19 @@
-import argparse
-import sys
-from argparse import ArgumentParser
-from dataclasses import dataclass
 from typing import Any, List
 
 import dash_bootstrap_components as dbc
 import pandas as pd
+import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
 
 from src.callbacks import register_callbacks
-from src.components import (
-    category_dropdown,
-    month_dropdown,
-    pivot_table,
-    tabs,
-    year_dropdown,
-)
-from src.data import Transactions, load_transaction_data
+from src.components import category_dropdown, month_dropdown, pivot_table, year_dropdown
+from src.data import Transactions, load_budget_data, load_transaction_data
 from src.typing.aliases import BudgetRecordsAlias
 from src.typing.classes import BudgetDataFrame
 
 transactions = load_transaction_data()
+planned_budget = load_budget_data()
 
 app = Dash(
     __name__,
@@ -37,7 +29,8 @@ app.layout = html.Div(
         year_dropdown,
         month_dropdown,
         category_dropdown,
-        # tabs,
+        html.Div(id="pie-chart"),
+        html.Div(id="bar-chart"),
         # html.Hr(),
         # html.H3("Transactions"),
         # pivot_table,
@@ -143,10 +136,69 @@ def filter_budget_records(
                 _transactions_pivot_table.drop(index=idx, inplace=True)
         return _transactions_pivot_table
 
-    transactions = filter_transactions(years, months, categories)
-    transactions = create_pivot_table(transactions)
-    drop_bad_transactions(transactions)
-    return transactions.to_dict("records")  # type: ignore
+    transactions_df = filter_transactions(years, months, categories)
+    budget_df = create_pivot_table(transactions_df)
+    budget_df_clean = drop_bad_transactions(budget_df)
+    return budget_df_clean.to_dict("records")  # type: ignore
+
+
+@app.callback(Output("pie-chart", "children"), Input("budget-pivot-table-records", "data"))
+def update_pie_chart(budget_records: list[dict[str, Any]]) -> dcc.Graph:
+    def budget_records_to_df(budget_records: list[dict[str, Any]]) -> pd.DataFrame:
+        budget = pd.DataFrame(budget_records)
+        for idx, row in budget.iterrows():
+            if row["Amount"] > 0:
+                budget = budget.loc[budget.index != idx, :]
+        budget["Amount"] = -budget["Amount"]
+        budget = budget.query("Amount > 0")
+        return budget
+
+    budget = budget_records_to_df(budget_records)
+    pie = go.Pie(labels=budget["Category"], values=budget["Amount"], hole=0.5)
+    fig = go.Figure(data=[pie])
+    fig.update_layout(margin=dict(t=40, b=0, l=0, r=0))
+    fig.update_traces(hovertemplate="%{label}<br>$%{value:.2f}<extra></extra>")
+    return dcc.Graph(figure=fig)
+
+
+@app.callback(Output("bar-chart", "children"), Input("budget-pivot-table-records", "data"))
+def update_bar_chart(budget_records: list[dict[str, Any]]) -> dcc.Graph:
+    def budget_records_to_df(budget_records: list[dict[str, Any]]) -> pd.DataFrame:
+        budget = pd.DataFrame(budget_records)
+        for idx, row in budget.iterrows():
+            if row["Amount"] > 0:
+                budget = budget.loc[budget.index != idx, :]
+        budget["Amount"] = -budget["Amount"]
+        budget = budget.query("Amount > 0")
+        return budget
+
+    budget = budget_records_to_df(budget_records)
+
+    budget["Percentage"] = 100 * budget["Amount"] / budget["Amount"].sum()
+    budget["Percentage"] = budget["Percentage"].map(lambda x: f"{x:.2f}%")
+
+    budget.sort_values("Amount", ascending=False, inplace=True)
+
+    budget["Amount"] = budget["Amount"].round(2)
+
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=budget["Category"],
+                y=budget["Amount"],
+                name="Actual Expense",
+            ),
+            go.Bar(
+                x=planned_budget.index,
+                y=planned_budget["Amount"],
+                name="Planned Expense",
+                visible="legendonly",
+            ),
+        ]
+    )
+    fig.update_layout(margin=dict(t=40, b=0, l=0, r=0), barmode="group")
+    fig.update_traces(textposition="outside")
+    return dcc.Graph(figure=fig)
 
 
 if __name__ == "__main__":

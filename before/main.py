@@ -2,7 +2,7 @@ import argparse
 import sys
 from argparse import ArgumentParser
 from dataclasses import dataclass
-from typing import List
+from typing import Any, List
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -103,6 +103,50 @@ def select_all_categories(year: list[int], month: list[int], _: list[int]) -> li
         .unique()
     )
     return sorted(categories)
+
+
+@app.callback(
+    Output("budget-pivot-table-records", "data"),
+    [
+        Input("year-dropdown", "value"),
+        Input("month-dropdown", "value"),
+        Input("category-dropdown", "value"),
+    ],
+)
+def filter_budget_records(
+    years: List[int], months: List[str], categories: List[str]
+) -> BudgetRecordsAlias:
+    def filter_transactions(years: List[int], months: List[str], categories: List[str]):
+        transactions = (
+            Transactions(load_transaction_data())
+            .filter(col_name="Year", values=years)
+            .filter(col_name="Month", values=months)
+            .filter(col_name="Category", values=categories)
+        )
+        transactions_df = transactions.to_data_frame().drop(columns=["Index"])
+        return transactions_df
+
+    def create_pivot_table(transactions: pd.DataFrame) -> BudgetDataFrame:
+        transactions_pivot_table: BudgetDataFrame = transactions.pivot_table(  # type: ignore
+            values=["Amount"],
+            index=["Category"],
+            aggfunc="sum",
+            fill_value=0,
+            dropna=False,
+        ).reset_index()
+        return transactions_pivot_table
+
+    def drop_bad_transactions(transactions_pivot_table: BudgetDataFrame):
+        _transactions_pivot_table = transactions_pivot_table.copy()
+        for idx in ["Income", "Ignore"]:
+            if idx in _transactions_pivot_table.Category:
+                _transactions_pivot_table.drop(index=idx, inplace=True)
+        return _transactions_pivot_table
+
+    transactions = filter_transactions(years, months, categories)
+    transactions = create_pivot_table(transactions)
+    drop_bad_transactions(transactions)
+    return transactions.to_dict("records")  # type: ignore
 
 
 if __name__ == "__main__":

@@ -16,7 +16,6 @@ def register_callbacks(app: Dash) -> None:
 
 
 def fetch_callbacks() -> List[Callback]:
-    from src.callbacks.filter_budet_records import FilterBudgetRecordsCallback
     from src.callbacks.populate_tab_output import PopulateTabOutput
     from src.callbacks.update_category_dropdown import UpdateCategoryDropDown
     from src.callbacks.update_month_dropdown import UpdateMonthDropDown
@@ -24,7 +23,7 @@ def fetch_callbacks() -> List[Callback]:
     from src.callbacks.update_year_dropdown import UpdateYearDropdown
 
     return [
-        FilterBudgetRecordsCallback(),
+        # FilterBudgetRecordsCallback(),
         # PopulateTabOutput(),
         # UpdateCategoryDropDown(),
         # UpdateRollingBudget(),

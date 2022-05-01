@@ -10,5 +10,6 @@ numpy
 omegaconf
 pandas
 pandas-stubs
+pandera
 plotly
 scikit-learn

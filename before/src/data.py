@@ -1,22 +1,31 @@
+import datetime as dt
+import typing
 from datetime import datetime
 from typing import Any, List, Tuple, Union
 
 import pandas as pd
 from omegaconf import OmegaConf
 
-from src.typing.classes import BudgetDataFrame
+
+def create_date_check_func(fmt: str) -> typing.Callable[[pd.Series], pd.Series]:
+    return lambda s: check_date_format(s, fmt)
 
 
-def load_transaction_data() -> BudgetDataFrame:
+def check_date_format(s: pd.Series, fmt: str) -> pd.Series:
+    checks = [True if dt.datetime.strptime(_, fmt) else False for _ in s]
+    return pd.Series(checks)
+
+
+def load_transaction_data() -> pd.DataFrame:
     transactions_path = "./data/transactions-cleaned-labeled.csv"
-    data: BudgetDataFrame = pd.read_csv(transactions_path)  # type: ignore
+    data = pd.read_csv(transactions_path)
     return data
 
 
-def load_budget_data() -> BudgetDataFrame:
+def load_budget_data() -> pd.DataFrame:
     config = OmegaConf.load("./config/budget/default.yaml")
     data = [{"Category": c, "Amount": a} for c, a in config.items()]
-    df: BudgetDataFrame = pd.DataFrame(data)  # type: ignore
+    df = pd.DataFrame(data)
     return df
 
 

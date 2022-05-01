@@ -3,6 +3,7 @@ from typing import Any, List
 
 import dash_bootstrap_components as dbc
 import pandas as pd
+import pandera as pa
 import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
@@ -10,10 +11,26 @@ from dash_pivottable import PivotTable
 
 from src import default_options
 from src.app_utils import generate_random_id
-from src.data import Transactions, load_budget_data, load_transaction_data
-from src.typing.classes import BudgetDataFrame
+from src.data import (
+    Transactions,
+    create_date_check_func,
+    load_budget_data,
+    load_transaction_data,
+)
 
-transactions = load_transaction_data()
+transactions_schema = pa.DataFrameSchema(
+    columns={
+        "Date": pa.Column(str, pa.Check(create_date_check_func("%m/%d/%Y"))),
+        # "Year": pa.Column(str, pa.Check(create_date_check_func("%Y"))),
+        "Month": pa.Column(str, pa.Check(create_date_check_func("%m-%b"))),
+        "Amount": pa.Column(float),
+        "Label": pa.Column(str),
+        "Account": pa.Column(str),
+        "Description": pa.Column(str),
+        "Category": pa.Column(str, nullable=True),
+    }
+)
+transactions = transactions_schema.validate(load_transaction_data())
 planned_budget = load_budget_data()
 
 years = sorted(transactions["Year"].unique())
@@ -194,8 +211,8 @@ def filter_budget_records(
         transactions_df = transactions.to_data_frame().drop(columns=["Index"])
         return transactions_df
 
-    def create_pivot_table(transactions: pd.DataFrame) -> BudgetDataFrame:
-        transactions_pivot_table: BudgetDataFrame = transactions.pivot_table(  # type: ignore
+    def create_pivot_table(transactions: pd.DataFrame) -> pd.DataFrame:
+        transactions_pivot_table: pd.DataFrame = transactions.pivot_table(  # type: ignore
             values=["Amount"],
             index=["Category"],
             aggfunc="sum",
@@ -204,7 +221,7 @@ def filter_budget_records(
         ).reset_index()
         return transactions_pivot_table
 
-    def drop_bad_transactions(transactions_pivot_table: BudgetDataFrame):
+    def drop_bad_transactions(transactions_pivot_table: pd.DataFrame):
         _transactions_pivot_table = transactions_pivot_table.copy()
         for idx in ["Income", "Ignore"]:
             if idx in _transactions_pivot_table.Category:

@@ -99,6 +99,9 @@ app.layout = html.Div(
         html.Div(
             id="div-pivot-table",
             children=PivotTable(
+                # A bug with a previous version of `dash_pivottable.PivotTable` required creating a
+                # random `id`. I think this issue has since been solved, but we may want to keep
+                # the workaround for backwards compatability.
                 id=generate_random_id(),
                 data=transactions.to_dict("records"),
                 rows=["Category"],

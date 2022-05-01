@@ -1,18 +1,8 @@
 import datetime as dt
-import typing
 from typing import Any, List, Union
 
 import pandas as pd
 import pandera as pa
-
-
-def create_date_check_func(
-    fmt: str,
-) -> typing.Callable[[pa.typing.Series[str]], pa.typing.Series[bool]]:
-    def func(s: pa.typing.Series[str]) -> pa.typing.Series[bool]:
-        return check_date_format(s, fmt)
-
-    return func
 
 
 def check_date_format(s: pa.typing.Series[str], fmt: str) -> pa.typing.Series[bool]:

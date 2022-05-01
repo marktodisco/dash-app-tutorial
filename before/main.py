@@ -7,13 +7,18 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
 from dash_pivottable import PivotTable
+from sklearn.pipeline import make_pipeline
 
-from src import defaults
-from src.data import load_transaction_data
+from src import defaults, transformers
 from src.random import generate_random_id
 from src.schema import TransactionsSchema
 
-transactions = load_transaction_data()
+transaction_preprocessing_pipeline = make_pipeline(
+    transformers.CreateYearFromDate(),
+    transformers.CreateMonthFromDate(),
+)
+raw_transactions = pd.read_csv("./data/transactions.csv")
+transactions = transaction_preprocessing_pipeline.fit_transform(raw_transactions)
 TransactionsSchema.validate(transactions)
 
 years = sorted(transactions.loc[:, TransactionsSchema.Year].unique())
@@ -132,8 +137,8 @@ app.layout = html.Div(
     ],
 )
 def select_all_years(
-    years: list[int], n_clicks: int, previous_n_clicks: int
-) -> tuple[list[int], int]:
+    years: list[str], n_clicks: int, previous_n_clicks: int
+) -> tuple[list[str], int]:
     clicked = n_clicks <= previous_n_clicks
     new_years = years if clicked else list(transactions.dropna()["Year"].unique())
     return sorted(new_years), n_clicks
@@ -191,8 +196,7 @@ def filter_budget_records(
     month_mask = transactions.isin(months).loc[:, TransactionsSchema.Month]
     category_mask = transactions.isin(categories).loc[:, TransactionsSchema.Category]
     row_mask = year_mask & month_mask & category_mask
-    col_mask: list[str] = list(transactions.columns.drop("Index"))
-    filtered_transactions: pd.DataFrame = transactions.loc[row_mask, col_mask]
+    filtered_transactions: pd.DataFrame = transactions.loc[row_mask, :]
 
     transactions_pivot_table = filtered_transactions.pivot_table(
         values=[TransactionsSchema.Amount],
@@ -207,24 +211,15 @@ def filter_budget_records(
         transactions_pivot_table
         .isin(["Income", "Ignore"])
         .loc[:, TransactionsSchema.Category]
-    ) 
+    )
     # fmt: on
     return transactions_pivot_table.loc[keep_rows_mask, :].to_dict(orient="records")
 
 
 @app.callback(Output("pie-chart", "children"), Input("budget-pivot-table-records", "data"))
-def update_pie_chart(budget_records: list[dict[str, Any]]) -> dcc.Graph:
-    def budget_records_to_df(budget_records: list[dict[str, Any]]) -> pd.DataFrame:
-        budget = pd.DataFrame(budget_records)
-        for idx, row in budget.iterrows():
-            if row["Amount"] > 0:
-                budget = budget.loc[budget.index != idx, :]
-        budget["Amount"] = -budget["Amount"]
-        budget = budget.query("Amount > 0")
-        return budget
-
-    budget = budget_records_to_df(budget_records)
-    pie = go.Pie(labels=budget["Category"], values=budget["Amount"], hole=0.5)
+def update_pie_chart(pivot_table_records: list[dict[str, float]]) -> dcc.Graph:
+    pivot_table = pd.DataFrame(pivot_table_records)
+    pie = go.Pie(labels=pivot_table["Category"], values=pivot_table["Amount"], hole=0.5)
     fig = go.Figure(data=[pie])
     fig.update_layout(margin=dict(t=40, b=0, l=0, r=0))
     fig.update_traces(hovertemplate="%{label}<br>$%{value:.2f}<extra></extra>")

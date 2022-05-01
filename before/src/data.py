@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-import pathlib
 from datetime import datetime
 from typing import Any, List, Tuple, Union
 
@@ -11,13 +8,13 @@ from src.typing.classes import BudgetDataFrame
 
 
 def load_transaction_data() -> BudgetDataFrame:
-    transactions_path = choose_real_or_fake_path("./data/transactions-cleaned-labeled.csv")
+    transactions_path = "./data/transactions-cleaned-labeled.csv"
     data: BudgetDataFrame = pd.read_csv(transactions_path)  # type: ignore
     return data
 
 
 def load_budget_data() -> BudgetDataFrame:
-    config = OmegaConf.load(choose_real_or_fake_path("./config/budget/default.yaml"))
+    config = OmegaConf.load("./config/budget/default.yaml")
     data = [{"Category": c, "Amount": a} for c, a in config.items()]
     df: BudgetDataFrame = pd.DataFrame(data)  # type: ignore
     return df
@@ -27,7 +24,7 @@ class Transactions:
     def __init__(self, df: pd.DataFrame) -> None:
         self.df = df
 
-    def filter(self, col_name: str, values: Union[List[Any], Any]) -> Transactions:
+    def filter(self, col_name: str, values: Union[List[Any], Any]) -> "Transactions":
         assert col_name in self.df.columns, "col_name not in columns"
 
         if not isinstance(values, list):
@@ -45,15 +42,6 @@ class Transactions:
 
     def __str__(self) -> str:
         return str(self.df)
-
-
-def choose_real_or_fake_path(path: str) -> str:
-    transactions_path = pathlib.Path(path)
-    if not transactions_path.exists():
-        transactions_path = ("./fake" / transactions_path).resolve()
-    if not transactions_path.exists():
-        raise FileNotFoundError(transactions_path.as_posix())
-    return str(transactions_path)
 
 
 def filter_by_year_and_month(data: pd.DataFrame, year: int, month: str) -> pd.DataFrame:

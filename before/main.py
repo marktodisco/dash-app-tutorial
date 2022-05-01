@@ -187,37 +187,29 @@ def select_all_categories(year: list[int], month: list[int], _: list[int]) -> li
 def filter_budget_records(
     years: list[int], months: list[str], categories: list[str]
 ) -> list[dict[str, Any]]:
-    def filter_transactions(years: list[int], months: list[str], categories: list[str]):
-        transactions = (
-            Transactions(load_transaction_data())
-            .filter(col_name=TransactionsSchema.Year, values=years)
-            .filter(col_name=TransactionsSchema.Month, values=months)
-            .filter(col_name=TransactionsSchema.Category, values=categories)
-        )
-        transactions_df = transactions.to_data_frame().drop(columns=["Index"])
-        return transactions_df
+    year_mask = transactions.isin(years).loc[:, TransactionsSchema.Year]
+    month_mask = transactions.isin(months).loc[:, TransactionsSchema.Month]
+    category_mask = transactions.isin(categories).loc[:, TransactionsSchema.Category]
+    row_mask = year_mask & month_mask & category_mask
+    col_mask: list[str] = list(transactions.columns.drop("Index"))
+    filtered_transactions: pd.DataFrame = transactions.loc[row_mask, col_mask]
 
-    def create_pivot_table(transactions: pd.DataFrame) -> pd.DataFrame:
-        transactions_pivot_table: pd.DataFrame = transactions.pivot_table(  # type: ignore
-            values=[TransactionsSchema.Amount],
-            index=[TransactionsSchema.Category],
-            aggfunc="sum",
-            fill_value=0,
-            dropna=False,
-        ).reset_index()
-        return transactions_pivot_table
+    transactions_pivot_table = filtered_transactions.pivot_table(
+        values=[TransactionsSchema.Amount],
+        index=[TransactionsSchema.Category],
+        aggfunc="sum",
+        fill_value=0,
+        dropna=False,
+    ).reset_index()
 
-    def drop_bad_transactions(transactions_pivot_table: pd.DataFrame):
-        _transactions_pivot_table = transactions_pivot_table.copy()
-        for idx in ["Income", "Ignore"]:
-            if idx in _transactions_pivot_table.Category:
-                _transactions_pivot_table.drop(index=idx, inplace=True)
-        return _transactions_pivot_table
-
-    transactions_df = filter_transactions(years, months, categories)
-    budget_df = create_pivot_table(transactions_df)
-    budget_df_clean = drop_bad_transactions(budget_df)
-    return budget_df_clean.to_dict("records")  # type: ignore
+    # fmt: off
+    keep_rows_mask = ~(
+        transactions_pivot_table
+        .isin(["Income", "Ignore"])
+        .loc[:, TransactionsSchema.Category]
+    )
+    # fmt: on
+    return transactions_pivot_table.loc[keep_rows_mask, :].to_dict(orient="records")
 
 
 @app.callback(Output("pie-chart", "children"), Input("budget-pivot-table-records", "data"))

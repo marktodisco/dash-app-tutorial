@@ -1,5 +1,4 @@
 import datetime as dt
-from typing import Any
 
 import pandas as pd
 import pandera as pa
@@ -14,27 +13,3 @@ def load_transaction_data() -> pd.DataFrame:
     transactions_path = "./data/transactions-cleaned-labeled.csv"
     data = pd.read_csv(transactions_path)
     return data
-
-
-class Transactions:
-    def __init__(self, df: pd.DataFrame) -> None:
-        self.df = df
-
-    def filter(self, col_name: str, values: list[Any] | Any) -> "Transactions":
-        assert col_name in self.df.columns, "col_name not in columns"
-
-        if not isinstance(values, list):
-            values = [values]
-        if len(values) == 0:
-            values = self.df[col_name].unique()
-
-        mask = self.df[col_name].isin(values)  # type: ignore
-        transactions = self.df.loc[mask] if len(mask) > 0 else self.df
-
-        return Transactions(transactions)
-
-    def to_data_frame(self) -> pd.DataFrame:
-        return self.df
-
-    def __str__(self) -> str:
-        return str(self.df)

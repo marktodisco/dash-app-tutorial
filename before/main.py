@@ -9,7 +9,7 @@ from dash.dependencies import Input, Output
 from dash_pivottable import PivotTable
 
 from src import defaults
-from src.data import Transactions, load_transaction_data
+from src.data import load_transaction_data
 from src.random import generate_random_id
 from src.schema import TransactionsSchema
 
@@ -207,7 +207,7 @@ def filter_budget_records(
         transactions_pivot_table
         .isin(["Income", "Ignore"])
         .loc[:, TransactionsSchema.Category]
-    )
+    ) 
     # fmt: on
     return transactions_pivot_table.loc[keep_rows_mask, :].to_dict(orient="records")
 

@@ -1,5 +1,5 @@
 import datetime as dt
-from typing import Any, List, Union
+from typing import Any
 
 import pandas as pd
 import pandera as pa
@@ -20,7 +20,7 @@ class Transactions:
     def __init__(self, df: pd.DataFrame) -> None:
         self.df = df
 
-    def filter(self, col_name: str, values: Union[List[Any], Any]) -> "Transactions":
+    def filter(self, col_name: str, values: list[Any] | Any) -> "Transactions":
         assert col_name in self.df.columns, "col_name not in columns"
 
         if not isinstance(values, list):

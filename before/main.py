@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, List
+from typing import Any
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -185,9 +185,9 @@ def select_all_categories(year: list[int], month: list[int], _: list[int]) -> li
     ],
 )
 def filter_budget_records(
-    years: List[int], months: List[str], categories: List[str]
+    years: list[int], months: list[str], categories: list[str]
 ) -> list[dict[str, Any]]:
-    def filter_transactions(years: List[int], months: List[str], categories: List[str]):
+    def filter_transactions(years: list[int], months: list[str], categories: list[str]):
         transactions = (
             Transactions(load_transaction_data())
             .filter(col_name=TransactionsSchema.Year, values=years)

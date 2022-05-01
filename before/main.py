@@ -6,7 +6,6 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
 
-from src.callbacks import register_callbacks
 from src.components import category_dropdown, month_dropdown, pivot_table, year_dropdown
 from src.data import Transactions, load_budget_data, load_transaction_data
 from src.typing.aliases import BudgetRecordsAlias
@@ -26,14 +25,16 @@ app.layout = html.Div(
     className="app-div",
     children=[
         html.H1("Financial Dashboard"),
+        html.Hr(),
         year_dropdown,
         month_dropdown,
         category_dropdown,
         html.Div(id="pie-chart"),
         html.Div(id="bar-chart"),
-        # html.Hr(),
-        # html.H3("Transactions"),
-        # pivot_table,
+        html.Hr(),
+        html.H3("Transactions Pivot Table"),
+        "The pivot table is not controlled by the drop down menus above.",
+        pivot_table,
         dcc.Store(id="filtered-transaction-records"),
         dcc.Store(id="budget-pivot-table-records"),
         dcc.Store(id="select-all-year-button-clicks", data=0),
@@ -41,8 +42,6 @@ app.layout = html.Div(
         dcc.Store(id="select-all-category-button-clicks", data=0),
     ],
 )
-
-register_callbacks(app)
 
 
 @app.callback(

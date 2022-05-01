@@ -124,7 +124,7 @@ def filter_transactions(
     if not isinstance(values, list):
         values = [values]
     if len(values) == 0:
-        values = transactions[col_name].unique()
+        values = list(transactions[col_name].unique())
 
     mask = transactions[col_name].isin(values)
     transactions = transactions.loc[mask] if len(mask) > 0 else transactions

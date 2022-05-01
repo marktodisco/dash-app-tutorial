@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
 
+from src import default_options
 from src.components import category_dropdown, month_dropdown, pivot_table, year_dropdown
 from src.data import Transactions, load_budget_data, load_transaction_data
 from src.typing.aliases import BudgetRecordsAlias
@@ -26,7 +27,23 @@ app.layout = html.Div(
     children=[
         html.H1("Financial Dashboard"),
         html.Hr(),
-        year_dropdown,
+        html.Div(
+            children=[
+                html.H6("Year"),
+                dcc.Dropdown(
+                    id="year-dropdown",
+                    options=default_options.get_year_options(),
+                    value=default_options.get_year_values(),
+                    multi=True,
+                ),
+                html.Button(
+                    className="dropdown-button",
+                    children=["Select All"],
+                    id="select-all-year-button",
+                    n_clicks=0,
+                ),
+            ]
+        ),
         month_dropdown,
         category_dropdown,
         html.Div(id="pie-chart"),

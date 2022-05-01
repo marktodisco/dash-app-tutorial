@@ -9,14 +9,12 @@ from dash.dependencies import Input, Output
 from dash_pivottable import PivotTable
 
 from src import defaults
-from src.data import Transactions, load_budget_data, load_transaction_data
+from src.data import Transactions, load_transaction_data
 from src.random import generate_random_id
 from src.schema import TransactionsSchema
 
 transactions = load_transaction_data()
 TransactionsSchema.validate(transactions)
-
-planned_budget = load_budget_data()
 
 years = sorted(transactions.loc[:, TransactionsSchema.Year].unique())
 months = sorted(transactions.loc[:, TransactionsSchema.Month].unique())
@@ -261,21 +259,8 @@ def update_bar_chart(budget_records: list[dict[str, Any]]) -> dcc.Graph:
 
     budget["Amount"] = budget["Amount"].round(2)
 
-    fig = go.Figure(
-        data=[
-            go.Bar(
-                x=budget["Category"],
-                y=budget["Amount"],
-                name="Actual Expense",
-            ),
-            go.Bar(
-                x=planned_budget.index,
-                y=planned_budget["Amount"],
-                name="Planned Expense",
-                visible="legendonly",
-            ),
-        ]
-    )
+    bar_chart = go.Bar(x=budget["Category"], y=budget["Amount"], name="Actual Expense")
+    fig = go.Figure(data=[bar_chart])
     fig.update_layout(margin=dict(t=40, b=0, l=0, r=0), barmode="group")
     fig.update_traces(textposition="outside")
     return dcc.Graph(figure=fig)

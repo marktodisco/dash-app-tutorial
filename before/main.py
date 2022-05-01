@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, List
 
 import dash_bootstrap_components as dbc
@@ -5,15 +6,27 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
+from dash_pivottable import PivotTable
 
 from src import default_options
-from src.components import category_dropdown, month_dropdown, pivot_table, year_dropdown
+from src.app_utils import generate_random_id
 from src.data import Transactions, load_budget_data, load_transaction_data
 from src.typing.aliases import BudgetRecordsAlias
 from src.typing.classes import BudgetDataFrame
 
 transactions = load_transaction_data()
 planned_budget = load_budget_data()
+
+years = sorted(transactions["Year"].unique())
+months = sorted(transactions["Month"].unique())
+
+now = datetime.now()
+current_year = now.year
+current_month = now.strftime("%m-%b")
+
+year_filter = {str(year): False for year in years if year != current_year}
+month_filter = {str(month): False for month in months if month != current_month}
+
 
 app = Dash(
     __name__,
@@ -44,14 +57,58 @@ app.layout = html.Div(
                 ),
             ]
         ),
-        month_dropdown,
-        category_dropdown,
+        html.Div(
+            children=[
+                html.H6("Month"),
+                dcc.Dropdown(
+                    id="month-dropdown",
+                    options=default_options.get_month_options(),
+                    value=default_options.get_month_values(),
+                    multi=True,
+                ),
+                html.Button(
+                    className="dropdown-button",
+                    children=["Select All"],
+                    id="select-all-month-button",
+                    n_clicks=0,
+                ),
+            ]
+        ),
+        html.Div(
+            children=[
+                html.H6("Category"),
+                dcc.Dropdown(
+                    id="category-dropdown",
+                    options=default_options.get_category_options(),
+                    value=default_options.get_category_values(),
+                    multi=True,
+                ),
+                html.Button(
+                    className="dropdown-button",
+                    children=["Select All"],
+                    id="select-all-category-button",
+                    n_clicks=0,
+                ),
+            ],
+        ),
         html.Div(id="pie-chart"),
         html.Div(id="bar-chart"),
         html.Hr(),
         html.H3("Transactions Pivot Table"),
         "The pivot table is not controlled by the drop down menus above.",
-        pivot_table,
+        html.Div(
+            id="div-pivot-table",
+            children=PivotTable(
+                id=generate_random_id(),
+                data=transactions.to_dict("records"),
+                rows=["Category"],
+                cols=["Year", "Month"],
+                vals=["Amount"],
+                rendererName="table",
+                aggregatorName="Sum",
+                valueFilter={"Year": year_filter, "Month": month_filter},
+            ),
+        ),
         dcc.Store(id="filtered-transaction-records"),
         dcc.Store(id="budget-pivot-table-records"),
         dcc.Store(id="select-all-year-button-clicks", data=0),

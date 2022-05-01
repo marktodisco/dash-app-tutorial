@@ -11,7 +11,6 @@ from dash_pivottable import PivotTable
 from src import default_options
 from src.app_utils import generate_random_id
 from src.data import Transactions, load_budget_data, load_transaction_data
-from src.typing.aliases import BudgetRecordsAlias
 from src.typing.classes import BudgetDataFrame
 
 transactions = load_transaction_data()
@@ -45,7 +44,7 @@ app.layout = html.Div(
                 html.H6("Year"),
                 dcc.Dropdown(
                     id="year-dropdown",
-                    options=default_options.get_year_options(),
+                    options=default_options.get_year_options(transactions),
                     value=default_options.get_year_values(),
                     multi=True,
                 ),
@@ -62,7 +61,7 @@ app.layout = html.Div(
                 html.H6("Month"),
                 dcc.Dropdown(
                     id="month-dropdown",
-                    options=default_options.get_month_options(),
+                    options=default_options.get_month_options(transactions),
                     value=default_options.get_month_values(),
                     multi=True,
                 ),
@@ -79,8 +78,8 @@ app.layout = html.Div(
                 html.H6("Category"),
                 dcc.Dropdown(
                     id="category-dropdown",
-                    options=default_options.get_category_options(),
-                    value=default_options.get_category_values(),
+                    options=default_options.get_category_options(transactions),
+                    value=default_options.get_category_values(transactions),
                     multi=True,
                 ),
                 html.Button(
@@ -184,7 +183,7 @@ def select_all_categories(year: list[int], month: list[int], _: list[int]) -> li
 )
 def filter_budget_records(
     years: List[int], months: List[str], categories: List[str]
-) -> BudgetRecordsAlias:
+) -> list[dict[str, Any]]:
     def filter_transactions(years: List[int], months: List[str], categories: List[str]):
         transactions = (
             Transactions(load_transaction_data())

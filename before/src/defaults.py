@@ -28,9 +28,9 @@ def get_category_values(transactions: pd.DataFrame) -> list[str]:
     return sorted(filter(lambda category: not pd.isna(category), categories))
 
 
-def get_year_values() -> list[str | int]:
-    return [datetime.now().year]
+def get_year_values() -> list[str]:
+    return [str(datetime.now().year)]
 
 
-def get_month_values() -> list[str | int]:
+def get_month_values() -> list[str]:
     return [datetime.now().strftime("%m-%b")]

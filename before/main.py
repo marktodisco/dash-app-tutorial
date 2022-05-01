@@ -3,38 +3,23 @@ from typing import Any, List
 
 import dash_bootstrap_components as dbc
 import pandas as pd
-import pandera as pa
 import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
 from dash_pivottable import PivotTable
 
-from src import default_options
-from src.app_utils import generate_random_id
-from src.data import (
-    Transactions,
-    create_date_check_func,
-    load_budget_data,
-    load_transaction_data,
-)
+from src import defaults
+from src.data import Transactions, load_budget_data, load_transaction_data
+from src.random import generate_random_id
+from src.schema import TransactionsSchema
 
-transactions_schema = pa.DataFrameSchema(
-    columns={
-        "Date": pa.Column(str, pa.Check(create_date_check_func("%m/%d/%Y"))),
-        # "Year": pa.Column(str, pa.Check(create_date_check_func("%Y"))),
-        "Month": pa.Column(str, pa.Check(create_date_check_func("%m-%b"))),
-        "Amount": pa.Column(float),
-        "Label": pa.Column(str),
-        "Account": pa.Column(str),
-        "Description": pa.Column(str),
-        "Category": pa.Column(str, nullable=True),
-    }
-)
-transactions = transactions_schema.validate(load_transaction_data())
+transactions = load_transaction_data()
+TransactionsSchema.validate(transactions)
+
 planned_budget = load_budget_data()
 
-years = sorted(transactions["Year"].unique())
-months = sorted(transactions["Month"].unique())
+years = sorted(transactions.loc[:, TransactionsSchema.Year].unique())
+months = sorted(transactions.loc[:, TransactionsSchema.Month].unique())
 
 now = datetime.now()
 current_year = now.year
@@ -61,8 +46,8 @@ app.layout = html.Div(
                 html.H6("Year"),
                 dcc.Dropdown(
                     id="year-dropdown",
-                    options=default_options.get_year_options(transactions),
-                    value=default_options.get_year_values(),
+                    options=defaults.get_year_options(transactions),
+                    value=defaults.get_year_values(),
                     multi=True,
                 ),
                 html.Button(
@@ -78,8 +63,8 @@ app.layout = html.Div(
                 html.H6("Month"),
                 dcc.Dropdown(
                     id="month-dropdown",
-                    options=default_options.get_month_options(transactions),
-                    value=default_options.get_month_values(),
+                    options=defaults.get_month_options(transactions),
+                    value=defaults.get_month_values(),
                     multi=True,
                 ),
                 html.Button(
@@ -95,8 +80,8 @@ app.layout = html.Div(
                 html.H6("Category"),
                 dcc.Dropdown(
                     id="category-dropdown",
-                    options=default_options.get_category_options(transactions),
-                    value=default_options.get_category_values(transactions),
+                    options=defaults.get_category_options(transactions),
+                    value=defaults.get_category_values(transactions),
                     multi=True,
                 ),
                 html.Button(
@@ -120,12 +105,15 @@ app.layout = html.Div(
                 # the workaround for backwards compatability.
                 id=generate_random_id(),
                 data=transactions.to_dict("records"),
-                rows=["Category"],
-                cols=["Year", "Month"],
-                vals=["Amount"],
+                rows=[TransactionsSchema.Category],
+                cols=[TransactionsSchema.Year, TransactionsSchema.Month],
+                vals=[TransactionsSchema.Amount],
                 rendererName="table",
                 aggregatorName="Sum",
-                valueFilter={"Year": year_filter, "Month": month_filter},
+                valueFilter={
+                    TransactionsSchema.Year: year_filter,
+                    TransactionsSchema.Month: month_filter,
+                },
             ),
         ),
         dcc.Store(id="filtered-transaction-records"),
@@ -204,17 +192,17 @@ def filter_budget_records(
     def filter_transactions(years: List[int], months: List[str], categories: List[str]):
         transactions = (
             Transactions(load_transaction_data())
-            .filter(col_name="Year", values=years)
-            .filter(col_name="Month", values=months)
-            .filter(col_name="Category", values=categories)
+            .filter(col_name=TransactionsSchema.Year, values=years)
+            .filter(col_name=TransactionsSchema.Month, values=months)
+            .filter(col_name=TransactionsSchema.Category, values=categories)
         )
         transactions_df = transactions.to_data_frame().drop(columns=["Index"])
         return transactions_df
 
     def create_pivot_table(transactions: pd.DataFrame) -> pd.DataFrame:
         transactions_pivot_table: pd.DataFrame = transactions.pivot_table(  # type: ignore
-            values=["Amount"],
-            index=["Category"],
+            values=[TransactionsSchema.Amount],
+            index=[TransactionsSchema.Category],
             aggfunc="sum",
             fill_value=0,
             dropna=False,

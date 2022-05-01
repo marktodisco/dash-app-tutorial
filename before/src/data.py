@@ -4,16 +4,22 @@ from datetime import datetime
 from typing import Any, List, Tuple, Union
 
 import pandas as pd
+import pandera as pa
 from omegaconf import OmegaConf
 
 
-def create_date_check_func(fmt: str) -> typing.Callable[[pd.Series], pd.Series]:
-    return lambda s: check_date_format(s, fmt)
+def create_date_check_func(
+    fmt: str,
+) -> typing.Callable[[pa.typing.Series[str]], pa.typing.Series[bool]]:
+    def func(s: pa.typing.Series[str]) -> pa.typing.Series[bool]:
+        return check_date_format(s, fmt)
+
+    return func
 
 
-def check_date_format(s: pd.Series, fmt: str) -> pd.Series:
+def check_date_format(s: pa.typing.Series[str], fmt: str) -> pa.typing.Series[bool]:
     checks = [True if dt.datetime.strptime(_, fmt) else False for _ in s]
-    return pd.Series(checks)
+    return pa.typing.Series(checks, dtype=bool)
 
 
 def load_transaction_data() -> pd.DataFrame:

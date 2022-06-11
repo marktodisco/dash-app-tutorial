@@ -5,7 +5,10 @@ import src
 
 
 def main() -> None:
-    app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+    app = Dash(
+        __name__,
+        external_stylesheets=[dbc.themes.BOOTSTRAP, "https://codepen.io/chriddyp/pen/bWLwgP.css"],
+    )
     app.title = "Financial Dashboard"
     app.layout = src.layout.create_layout()
     src.callbacks.register_callbacks(app)

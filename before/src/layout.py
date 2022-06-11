@@ -13,7 +13,6 @@ def create_layout() -> html.Div:
             src.components.month_dropdown.render(),
             src.components.category_dropdown.render(),
             html.Div(id="pie-chart"),
-            dcc.Store(id="filtered-transaction-records"),
             dcc.Store(id="budget-pivot-table-records"),
             dcc.Store(id="select-all-year-button-clicks", data=0),
             dcc.Store(id="select-all-month-button-clicks", data=0),

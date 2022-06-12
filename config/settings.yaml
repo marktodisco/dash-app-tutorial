@@ -50,4 +50,4 @@ dates:
   day_format: '%d'
   month_format: '%m-%b'
   year_format: '%Y'
-debug: true
+debug: false

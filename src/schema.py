@@ -1,7 +1,8 @@
+import datetime as dt
+
 import pandera as pa
 
 import src
-from src.data import check_date_format
 
 SETTINGS = src.config.load_settings()
 
@@ -54,3 +55,8 @@ class TransactionsSchema(pa.SchemaModel):
     @pa.check(SETTINGS.data.columns.month, name="month_format")
     def check_month_format(cls, s: pa.typing.Series[str]) -> pa.typing.Series[str]:
         return check_date_format(s, SETTINGS.dates.month_format)
+
+
+def check_date_format(s: pa.typing.Series[str], fmt: str) -> pa.typing.Series[bool]:
+    checks = [True if dt.datetime.strptime(_, fmt) else False for _ in s]
+    return pa.typing.Series(checks, dtype=bool)

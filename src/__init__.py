@@ -1,6 +1,7 @@
 from . import (
     callbacks,
     components,
+    config,
     data,
     defaults,
     layout,
@@ -13,6 +14,7 @@ from . import (
 __all__ = [
     "callbacks",
     "components",
+    "config",
     "data",
     "defaults",
     "layout",

@@ -4,18 +4,19 @@ import src
 
 
 def create_layout() -> html.Div:
+    settings = src.config.load_settings()
     return html.Div(
-        className="app-div",
+        className=settings.app.html_class_name,
         children=[
-            html.H1("Financial Dashboard"),
+            html.H1(settings.app.title),
             html.Hr(),
             src.components.year_dropdown.render(),
             src.components.month_dropdown.render(),
             src.components.category_dropdown.render(),
-            html.Div(id="pie-chart"),
-            dcc.Store(id="budget-pivot-table-records"),
-            dcc.Store(id="select-all-year-button-clicks", data=0),
-            dcc.Store(id="select-all-month-button-clicks", data=0),
-            dcc.Store(id="select-all-category-button-clicks", data=0),
+            html.Div(id=settings.components.pie.id),
+            dcc.Store(id=settings.components.records.id),
+            dcc.Store(id=settings.components.year_button_clicks.id, data=0),
+            dcc.Store(id=settings.components.month_button_clicks.id, data=0),
+            dcc.Store(id=settings.components.category_button_clicks.id, data=0),
         ],
     )

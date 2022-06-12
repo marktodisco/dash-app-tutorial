@@ -4,37 +4,34 @@ import pandas as pd
 import pandera as pa
 from sklearn.base import BaseEstimator, TransformerMixin
 
+import src
 from src.data import check_date_format
 
-YEAR_CODE = "%Y"
-MONTH_CODE = "%m"
-DAY_CODE = "%d"
-DATE_FMT = f"{MONTH_CODE}/{DAY_CODE}/{YEAR_CODE}"
-MONTH_FMT = f"{MONTH_CODE}-%b"
+SETTINGS = src.config.load_settings()
 
 
 class DateColumnSchema(pa.SchemaModel):
-    Date: pa.typing.Series[str]
+    date: pa.typing.Series[str]
 
-    @pa.check("Date", name="date_format")
+    @pa.check("date", name="date_format")
     def check_date_format(cls, s: pa.typing.Series[str]) -> pa.typing.Series[bool]:
-        return check_date_format(s, DATE_FMT)
+        return check_date_format(s, SETTINGS.dates.date_format)
 
 
 class YearColumnSchema(pa.SchemaModel):
-    Year: pa.typing.Series[str]
+    year: pa.typing.Series[str]
 
-    @pa.check("Year", name="year_format")
+    @pa.check("year", name="year_format")
     def check_year_format(cls, s: pa.typing.Series[str]) -> pa.typing.Series[str]:
-        return check_date_format(s, YEAR_CODE)
+        return check_date_format(s, SETTINGS.dates.year_format)
 
 
 class MonthColumnSchema(pa.SchemaModel):
-    Month: pa.typing.Series[str]
+    month: pa.typing.Series[str]
 
-    @pa.check("Month", name="month_format")
+    @pa.check("month", name="month_format")
     def check_month_format(cls, s: pa.typing.Series[str]) -> pa.typing.Series[str]:
-        return check_date_format(s, MONTH_FMT)
+        return check_date_format(s, SETTINGS.dates.month_format)
 
 
 class CreateYearFromDate(BaseEstimator, TransformerMixin):
@@ -44,10 +41,10 @@ class CreateYearFromDate(BaseEstimator, TransformerMixin):
 
     def transform(self, x: pd.DataFrame, y=None) -> pd.DataFrame:
         _x = x.copy()
-        _x.loc[:, YearColumnSchema.Year] = (
-            _x.loc[:, DateColumnSchema.Date]
-            .apply(lambda d: dt.datetime.strptime(d, DATE_FMT))
-            .apply(lambda d: dt.datetime.strftime(d, YEAR_CODE))
+        _x.loc[:, YearColumnSchema.year] = (
+            _x.loc[:, DateColumnSchema.date]
+            .apply(lambda d: dt.datetime.strptime(d, SETTINGS.dates.date_format))
+            .apply(lambda d: dt.datetime.strftime(d, SETTINGS.dates.year_format))
         )
         return _x
 
@@ -59,9 +56,9 @@ class CreateMonthFromDate(BaseEstimator, TransformerMixin):
 
     def transform(self, x: pd.DataFrame, y=None) -> pd.DataFrame:
         _x = x.copy()
-        _x.loc[:, MonthColumnSchema.Month] = (
-            _x.loc[:, DateColumnSchema.Date]
-            .apply(lambda d: dt.datetime.strptime(d, DATE_FMT))
-            .apply(lambda d: dt.datetime.strftime(d, MONTH_FMT))
+        _x.loc[:, MonthColumnSchema.month] = (
+            _x.loc[:, DateColumnSchema.date]
+            .apply(lambda d: dt.datetime.strptime(d, SETTINGS.dates.date_format))
+            .apply(lambda d: dt.datetime.strftime(d, SETTINGS.dates.month_format))
         )
         return _x

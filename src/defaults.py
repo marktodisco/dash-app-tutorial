@@ -2,16 +2,19 @@ from datetime import datetime
 
 import pandas as pd
 
+import src
 from src.schema import TransactionsSchema
+
+SETTINGS = src.config.load_settings()
 
 
 def get_year_options(transactions: pd.DataFrame) -> list[dict[str, str]]:
-    return [{"label": i, "value": i} for i in transactions.loc[:, TransactionsSchema.Year].unique()]
+    return [{"label": i, "value": i} for i in transactions.loc[:, TransactionsSchema.year].unique()]
 
 
 def get_month_options(transactions: pd.DataFrame) -> list[dict[str, str]]:
     return [
-        {"label": i, "value": i} for i in transactions.loc[:, TransactionsSchema.Month].unique()
+        {"label": i, "value": i} for i in transactions.loc[:, TransactionsSchema.month].unique()
     ]
 
 
@@ -24,7 +27,7 @@ def get_category_options(transactions: pd.DataFrame) -> list[dict[str, str]]:
 
 
 def get_category_values(transactions: pd.DataFrame) -> list[str]:
-    categories = transactions.loc[:, TransactionsSchema.Category].unique()
+    categories = transactions.loc[:, TransactionsSchema.category].unique()
     return sorted(filter(lambda category: not pd.isna(category), categories))
 
 
@@ -33,4 +36,4 @@ def get_year_values() -> list[str]:
 
 
 def get_month_values() -> list[str]:
-    return [datetime.now().strftime("%m-%b")]
+    return [datetime.now().strftime(SETTINGS.dates.month_format)]

@@ -2,6 +2,12 @@ hr {
     border-top: 2px solid gray;
 }
 
+.dropdown-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
 .dropdown-button {
     width: 100%;
     margin-top: 5px;
@@ -12,9 +18,7 @@ hr {
 }
 
 .app-div {
-    padding: 30px;
-    margin: auto;
-    width: 70%;
+    padding: 10px;
 }
 
 .data-table-div {
@@ -48,4 +52,10 @@ hr {
     text-align: center;
     padding-top: 10px;
     padding-bottom: 20px;
+}
+
+@media(max-width: 800px) {
+    .dropdown-container {
+        grid-template-columns: 1fr;
+    }
 }

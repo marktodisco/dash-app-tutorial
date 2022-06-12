@@ -10,9 +10,14 @@ def create_layout() -> html.Div:
         children=[
             html.H1(settings.app.title),
             html.Hr(),
-            src.components.year_dropdown.render(),
-            src.components.month_dropdown.render(),
-            src.components.category_dropdown.render(),
+            html.Div(
+                className="dropdown-container",
+                children=[
+                    src.components.year_dropdown.render(),
+                    src.components.month_dropdown.render(),
+                    src.components.category_dropdown.render(),
+                ],
+            ),
             html.Div(id=settings.components.pie.id),
             dcc.Store(id=settings.components.records.id),
             dcc.Store(id=settings.components.year_button_clicks.id, data=0),

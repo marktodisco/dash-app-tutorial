@@ -22,5 +22,9 @@ def register(app: dash.Dash) -> None:
         years: list[str], n_clicks: int, previous_n_clicks: int
     ) -> tuple[list[str], int]:
         clicked = n_clicks <= previous_n_clicks
-        new_years = years if clicked else list(load_transaction_data().dropna()["year"].unique())
+        new_years = (
+            years
+            if clicked
+            else list(load_transaction_data()[src.schema.YearColumnSchema.year].unique())
+        )
         return sorted(new_years), n_clicks

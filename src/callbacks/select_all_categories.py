@@ -19,9 +19,11 @@ def register(app: dash.Dash) -> None:
         categories: list[str] = list(
             load_transaction_data()
             .dropna()
-            .query(f"year == {year}")
-            .query(f"month == {month}")
-            .loc[:, "category"]
+            .query(
+                f"({src.schema.YearColumnSchema.year} == {year}) "
+                f"& ({src.schema.MonthColumnSchema.month} == {month})"
+            )
+            .loc[:, src.schema.RawTransactionsSchema.category]
             .unique()
         )
         return sorted(categories)

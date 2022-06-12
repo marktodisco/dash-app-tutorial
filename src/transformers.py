@@ -1,11 +1,16 @@
 import datetime as dt
 
 import pandas as pd
+from sklearn import pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 
 import src
 
 SETTINGS = src.config.load_settings()
+
+
+def create_preprocessing_pipeline() -> pipeline.Pipeline:
+    return pipeline.make_pipeline(CreateYearFromDate(), CreateMonthFromDate())
 
 
 class CreateYearFromDate(BaseEstimator, TransformerMixin):

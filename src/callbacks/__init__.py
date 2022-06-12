@@ -2,13 +2,15 @@ from typing import Callable
 
 import dash
 
+DashCallbackRegistrant = Callable[[dash.Dash], None]
+
 
 def register_callbacks(app: dash.Dash) -> None:
-    for callback in collect_callbacks():
-        callback(app)
+    for callback_registrant in collect_callback_registrants():
+        callback_registrant(app)
 
 
-def collect_callbacks() -> tuple[Callable[[dash.Dash], None], ...]:
+def collect_callback_registrants() -> tuple[DashCallbackRegistrant, ...]:
     from . import (
         filter_budget_records,
         select_all_categories,

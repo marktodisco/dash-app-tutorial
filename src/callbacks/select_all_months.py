@@ -1,7 +1,6 @@
 import dash
 import src
 from dash.dependencies import Input, Output
-from src.transactions import load_transaction_data
 
 SETTINGS = src.config.load_settings()
 
@@ -22,11 +21,11 @@ def register(app: dash.Dash) -> None:
     def _select_all_months(
         years: list[int], months: list[str], n_clicks: int, previous_n_clicks: int
     ) -> tuple[list[str], int]:
-        filtered_transactions = load_transaction_data().query(
+        filtered_transactions = src.transactions.load_transaction_data().query(
             f"{src.schema.YearColumnSchema.year} == {years}"
         )
         clicked = n_clicks <= previous_n_clicks
-        new_months = (
+        new_months: list[str] = (
             months
             if clicked
             else list(filtered_transactions[src.schema.MonthColumnSchema.month].unique())

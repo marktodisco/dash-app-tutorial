@@ -1,7 +1,6 @@
 import dash
 import src
 from dash.dependencies import Input, Output
-from src.transactions import load_transaction_data
 
 SETTINGS = src.config.load_settings()
 
@@ -17,8 +16,7 @@ def register(app: dash.Dash) -> None:
     )
     def _select_all_categories(year: list[int], month: list[int], _: list[int]) -> list[str]:
         categories: list[str] = list(
-            load_transaction_data()
-            .dropna()
+            src.transactions.load_transaction_data()
             .query(
                 f"({src.schema.YearColumnSchema.year} == {year}) "
                 f"& ({src.schema.MonthColumnSchema.month} == {month})"

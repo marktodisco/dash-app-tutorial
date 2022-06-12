@@ -1,7 +1,6 @@
 import dash
 import src
 from dash.dependencies import Input, Output
-from src.transactions import load_transaction_data
 
 SETTINGS = src.config.load_settings()
 
@@ -22,9 +21,11 @@ def register(app: dash.Dash) -> None:
         years: list[str], n_clicks: int, previous_n_clicks: int
     ) -> tuple[list[str], int]:
         clicked = n_clicks <= previous_n_clicks
-        new_years = (
+        new_years: list[str] = (
             years
             if clicked
-            else list(load_transaction_data()[src.schema.YearColumnSchema.year].unique())
+            else list(
+                src.transactions.load_transaction_data()[src.schema.YearColumnSchema.year].unique()
+            )
         )
         return sorted(new_years), n_clicks
